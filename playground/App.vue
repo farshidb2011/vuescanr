@@ -3,7 +3,7 @@ import { ref, onMounted, onUnmounted } from "vue";
 import { useZbar } from '@/composiable/zbar';
 import type { ZBarSymbol } from "@undecaf/zbar-wasm";
 
-const { camera, detect, video, canvas, cleanup, startFrameCapture, stopFrameCapture } = useZbar();
+const { init, start, stop, pause, resume, detect, video, canvas, cleanup, startFrameCapture, stopFrameCapture } = useZbar();
 
 const detected = ref<string[]>([]);
 const isScanning = ref<boolean>(false);
@@ -32,7 +32,7 @@ const handleDetection = (symbols: ZBarSymbol[]): void => {
   stopFrameCapture();
 
   // Pause camera to prevent further video updates
-  camera.pause();
+  pause();
 
   // Stop scanning
   stopScanning();
@@ -97,7 +97,7 @@ const resetDetection = (): void => {
   }
 
   // Resume camera
-  camera.resume();
+  resume();
 
   // Start frame capture again
   startFrameCapture();
@@ -109,10 +109,10 @@ const resetDetection = (): void => {
 onMounted(async () => {
   try {
     // Initialize camera
-    await camera.init();
+    await init();
 
     // Start camera stream
-    await camera.start();
+    await start();
 
     // Start capturing frames to canvas
     startFrameCapture();

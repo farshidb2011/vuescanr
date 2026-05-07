@@ -18,7 +18,7 @@ interface DetectionState {
 }
 
 export const useZbar = () => {
-  const { video, canvas, ...camera } = useCamera();
+  const { video, canvas, init, pause, start, stop, resume } = useCamera();
 
   const offCanvas = ref<OffscreenCanvas | null>(null);
   const detectionState: DetectionState = {
@@ -248,7 +248,11 @@ export const useZbar = () => {
     video,
     canvas,
     detect,
-    camera,
+    init,
+    start,
+    stop,
+    pause,
+    resume,
     captureFrame,
     startFrameCapture,
     stopFrameCapture,

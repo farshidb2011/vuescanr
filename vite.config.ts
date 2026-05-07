@@ -16,9 +16,11 @@ export default defineConfig(() => {
     ...baseConfig,
     build: {
       outDir: 'lib-dist',
+      copyPublicDir: false,
       lib: {
         entry: path.resolve(__dirname, "src/index.ts"),
         name: "VueScanr",
+        formats:['es','cjs'],
         fileName: (format) => `vuescanr.${format}.js`,
       },
       rollupOptions: {
