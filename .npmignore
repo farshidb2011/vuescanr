@@ -1,0 +1,20 @@
+*
+!lib-dist/**
+!README.md
+!USAGE.md
+!LICENSE
+!package.json
+!pnpm-lock.yaml
+
+# Exclude unnecessary directories
+playground/
+public/
+nginx/
+src/
+pkgs/
+.git/
+.gitignore
+.npmrc
+vite.config.ts
+vite.playground.config.ts
+tsconfig.json

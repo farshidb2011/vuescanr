@@ -1,0 +1,85 @@
+{
+  "name": "vuescanr",
+  "version": "0.1.0",
+  "description": "A powerful and efficient Vue 3 barcode scanning library with real-time detection using WebAssembly",
+  "type": "module",
+  "license": "MIT",
+  "author": {
+    "name": "Farshid Bahadori",
+    "url": "https://github.com/farshidb"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/farshidb/vuescanr.git"
+  },
+  "homepage": "https://github.com/farshidb/vuescanr#readme",
+  "bugs": {
+    "url": "https://github.com/farshidb/vuescanr/issues"
+  },
+  "keywords": [
+    "vue",
+    "vue3",
+    "barcode",
+    "scanner",
+    "barcode-scanner",
+    "vue-barcode-scanner",
+    "qr-code",
+    "barcode-detection",
+    "wasm",
+    "webassembly",
+    "zbar"
+  ],
+  "main": "./lib-dist/index.js",
+  "module": "./lib-dist/index.es.js",
+  "types": "./lib-dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./lib-dist/index.es.js",
+      "require": "./lib-dist/index.js",
+      "types": "./lib-dist/index.d.ts"
+    },
+    "./composable": {
+      "import": "./lib-dist/composiable/zbar.js",
+      "require": "./lib-dist/composiable/zbar.js",
+      "types": "./lib-dist/composiable/zbar.d.ts"
+    }
+  },
+  "files": [
+    "lib-dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "dev": "vite --config vite.playground.config.ts",
+    "build-lib": "vue-tsc --declaration --emitDeclarationOnly --outDir lib-dist && vite build --mode lib",
+    "build": "vue-tsc -b && vite build --config vite.playground.config.ts",
+    "build-types": "vue-tsc --declaration --emitDeclarationOnly --outDir lib-dist",
+    "preview": "vite preview --config vite.playground.config.ts",
+    "prepublishOnly": "pnpm run build-lib",
+    "prepack": "pnpm run build-lib"
+  },
+  "packageManager": "pnpm@10.23.0",
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "peerDependencies": {
+    "vue": "^3.5.0"
+  },
+  "peerDependenciesMeta": {
+    "vue": {
+      "optional": false
+    }
+  },
+  "dependencies": {
+    "@undecaf/zbar-wasm": "^0.11.0",
+    "vue3cam-lib": "^0.0.6"
+  },
+  "devDependencies": {
+    "@types/node": "^24.12.2",
+    "@vitejs/plugin-vue": "^6.0.6",
+    "@vue/tsconfig": "^0.9.1",
+    "typescript": "~6.0.2",
+    "vite": "^8.0.10",
+    "vue-tsc": "^3.2.7"
+  }
+}
