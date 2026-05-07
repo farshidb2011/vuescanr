@@ -279,55 +279,6 @@ onUnmounted(() => {
   </div>
 </template>
 
-<style scoped>
-.scanner {
-  max-width: 600px;
-  margin: 0 auto;
-  padding: 20px;
-}
-
-.preview {
-  width: 100%;
-  border: 2px solid #00ff00;
-  border-radius: 8px;
-  margin-bottom: 20px;
-}
-
-.results {
-  background: #f0f0f0;
-  padding: 20px;
-  border-radius: 8px;
-  margin-bottom: 20px;
-}
-
-.barcode {
-  padding: 10px;
-  margin: 5px 0;
-  background: #fff;
-  border-left: 3px solid #00ff00;
-  font-family: monospace;
-}
-
-.scanning {
-  text-align: center;
-  padding: 20px;
-  color: #666;
-}
-
-button {
-  width: 100%;
-  padding: 12px;
-  background: #00ff00;
-  border: none;
-  border-radius: 6px;
-  font-weight: bold;
-  cursor: pointer;
-}
-
-button:hover {
-  background: #00dd00;
-}
-</style>
 ```
 
 ## Real-Time Scanning Pattern
