@@ -12,9 +12,13 @@ Complete API documentation for the `useZbar` composable function.
 import { useZbar } from 'vuescanr'
 
 const {
+  init,               // Initialize camera settings and get permission
+  start,              // Start video stream from camera to canvas
+  stop,               // Stop video stream from camera
+  pause,              // Pause video stream
+  resume,             // Resume video stream
   video,              // HTMLVideoElement ref - camera stream
   canvas,             // HTMLCanvasElement ref - display canvas
-  camera,             // Camera control object
   detect,             // Detection function
   captureFrame,       // Single frame capture function
   startFrameCapture,  // Start continuous frame capture
@@ -58,7 +62,7 @@ const {
 
 ```typescript
 // Initialize with custom config
-await camera.init({
+await init({
   canvasWidth: 640,
   canvasHeight: 480
 })
@@ -67,9 +71,9 @@ await camera.init({
 await camera.start()
 
 // Control the stream
-camera.pause()
-camera.resume()
-camera.stop()
+pause()
+resume()
+stop()
 ```
 
 ### `captureFrame()`
@@ -242,14 +246,14 @@ const reset = () => {
   if (ctx && canvas.value) {
     ctx.clearRect(0, 0, canvas.value.width, canvas.value.height)
   }
-  camera.resume()
+  resume()
   startFrameCapture()
   startScanning()
 }
 
 onMounted(async () => {
-  await camera.init()
-  await camera.start()
+  await init()
+  await start()
   startFrameCapture()
   startScanning()
 })
@@ -389,8 +393,8 @@ symbols.forEach(symbol => {
 ### Camera Not Starting
 ```typescript
 try {
-  await camera.init()
-  await camera.start()
+  await init()
+  await start()
 } catch (error) {
   console.error('Camera error:', error)
   // Check browser permissions
