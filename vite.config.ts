@@ -16,6 +16,7 @@ export default defineConfig(() => {
     ...baseConfig,
     build: {
       outDir: 'lib-dist',
+      emptyOutDir: false,
       copyPublicDir: false,
       lib: {
         entry: path.resolve(__dirname, "src/index.ts"),

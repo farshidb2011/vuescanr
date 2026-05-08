@@ -1,6 +1,6 @@
 {
   "name": "vuescanr",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "A powerful and efficient Vue 3 barcode scanning library with real-time detection using WebAssembly",
   "type": "module",
   "license": "MIT",
@@ -29,19 +29,14 @@
     "webassembly",
     "zbar"
   ],
-  "main": "./lib-dist/index.js",
-  "module": "./lib-dist/index.es.js",
+  "main": "./lib-dist/vuescanr.cjs.js",
+  "module": "./lib-dist/vuescanr.es.js",
   "types": "./lib-dist/index.d.ts",
   "exports": {
     ".": {
-      "import": "./lib-dist/index.es.js",
-      "require": "./lib-dist/index.js",
+      "import": "./lib-dist/vuescanr.es.js",
+      "require": "./lib-dist/vuescanr.cjs.js",
       "types": "./lib-dist/index.d.ts"
-    },
-    "./composable": {
-      "import": "./lib-dist/composiable/zbar.js",
-      "require": "./lib-dist/composiable/zbar.js",
-      "types": "./lib-dist/composiable/zbar.d.ts"
     }
   },
   "files": [
