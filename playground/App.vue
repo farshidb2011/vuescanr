@@ -1,10 +1,18 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from "vue";
+import { ref, onMounted, onUnmounted, nextTick, watch } from "vue";
 import { useZbar } from '@/composiable/zbar';
 import type { ZBarSymbol } from "@undecaf/zbar-wasm";
+import { useCamera, Config } from "vue3cam-lib";
+import { drawScanRegion } from "@/core/visualiz";
 
-const { init, start, stop, pause, resume, detect, video, canvas, cleanup, startFrameCapture, stopFrameCapture } = useZbar();
+const { video, canvas, ...camera } = useCamera();
+const { init, detect} = useZbar();
 
+let overlayContext: CanvasRenderingContext2D | null = null;
+// let contianerScanContext: CanvasRenderingContext2D | null = null;
+
+const overlay = ref<HTMLCanvasElement | null>(null);
+// const scanRegion = ref<HTMLCanvasElement | null>(null);
 const detected = ref<string[]>([]);
 const isScanning = ref<boolean>(false);
 const lastDetectionTime = ref<number>(0);
@@ -28,18 +36,9 @@ const handleDetection = (symbols: ZBarSymbol[]): void => {
     return;
   }
 
-  // Stop frame capture to freeze the last frame
-  stopFrameCapture();
-
-  // Pause camera to prevent further video updates
-  pause();
-
-  // Stop scanning
-  stopScanning();
-
   // Decode all detected barcodes
-  const decodedValues = multipleDetectionMode.value 
-    ? symbols.map((symbol) => symbol.decode('utf-8')).filter(Boolean) 
+  const decodedValues = multipleDetectionMode.value
+    ? symbols.map((symbol) => symbol.decode('utf-8')).filter(Boolean)
     : [symbols[0].decode('utf-8')];
 
   if (decodedValues.length > 0) {
@@ -53,6 +52,7 @@ const handleDetection = (symbols: ZBarSymbol[]): void => {
  * Start continuous barcode scanning
  */
 const startScanning = (): void => {
+
   if (isScanning.value) return;
   isScanning.value = true;
 
@@ -60,10 +60,12 @@ const startScanning = (): void => {
     try {
       const symbols = await detect({
         enableVisualization: true,
-        visualizationColor: '#00ff0080',
+        visualizationColor: '#05ad2c',
+        overlayCtx: overlayContext,
         visualizationLineWidth: 2,
         multipleDetection: multipleDetectionMode.value,
       });
+
       handleDetection(symbols);
     } catch (error) {
       console.error('Scanning error:', error);
@@ -89,46 +91,45 @@ const stopScanning = (): void => {
  */
 const resetDetection = (): void => {
   detected.value = [];
-
-  // Clear canvas
   const ctx = canvas.value?.getContext('2d');
   if (ctx && canvas.value) {
     ctx.clearRect(0, 0, canvas.value.width, canvas.value.height);
   }
-
-  // Resume camera
-  resume();
-
-  // Start frame capture again
-  startFrameCapture();
-
-  // Begin scanning
+  const overlayCtx = overlay.value?.getContext('2d');
+  if (overlayCtx && overlay.value) {
+    overlayCtx.clearRect(0, 0, overlay.value.width, overlay.value.height);
+  }
+  camera.resume();
   startScanning();
 };
 
 onMounted(async () => {
   try {
-    // Initialize camera
-    await init();
-
-    // Start camera stream
-    await start();
-
-    // Start capturing frames to canvas
-    startFrameCapture();
-
-    // Begin scanning
-    startScanning();
+    overlayContext = overlay.value?.getContext('2d') || null;
+    // contianerScanContext = scanRegion.value?.getContext('2d') || null;
+    await camera.init();
+    await camera.start();
+    await nextTick();
   } catch (error) {
     console.error('Camera initialization error:', error);
   }
 });
 
 onUnmounted(() => {
-  // Cleanup resources
   stopScanning();
-  stopFrameCapture();
-  cleanup();
+});
+
+watch(canvas, (newCanvas) => {
+  if (newCanvas) {
+    init(video.value!, newCanvas);
+    startScanning();
+    console.log('start scanning...');
+    // if(contianerScanContext){
+    //   drawScanRegion(contianerScanContext, newCanvas);
+    // }
+  }
+}, {
+  once: true,
 });
 </script>
 
@@ -140,6 +141,8 @@ onUnmounted(() => {
     <section class="camera-section">
       <div class="camera-wrapper">
         <canvas ref="canvas" class="scanner-canvas"></canvas>
+        <canvas ref="overlay" class="scanner-overlay"></canvas>
+        <!-- <canvas ref="scanRegion" class="scanner-scan-region"></canvas> -->
         <div v-if="isScanning && detected.length === 0" class="scanning-indicator">
           <div class="spinner"></div>
           <p>Scanning...</p>
@@ -168,7 +171,7 @@ onUnmounted(() => {
       <div class="result-container">
         <div v-if="detected.length > 0" class="detection-result">
           <h3>Detected Barcode{{ detected.length > 1 ? 's' : '' }}</h3>
-          
+
           <div v-if="detected.length === 1" class="single-barcode">
             <div class="barcode-value">{{ detected[0] }}</div>
           </div>
@@ -232,13 +235,33 @@ onUnmounted(() => {
 }
 
 .scanner-canvas {
-  width: 100%;
-  height: 100%;
+  width: 640px;
+  height: 480px;
   display: block;
   border: 2px solid #00ff00;
   border-radius: 8px;
   background: #000;
   object-fit: cover;
+}
+
+.scanner-overlay {
+  border: 2px solid blue;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 640px;
+  height: 480px;
+  pointer-events: none;
+}
+
+.scanner-scan-region {
+  border: 2px solid rgb(243, 20, 176);
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 640px;
+  height: 480px;
+  pointer-events: none;
 }
 
 .scanning-indicator {
@@ -461,6 +484,7 @@ onUnmounted(() => {
     opacity: 0;
     transform: translateY(20px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
