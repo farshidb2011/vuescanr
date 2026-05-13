@@ -1,6 +1,6 @@
 {
   "name": "vuescanr",
-  "version": "0.1.3",
+  "version": "0.2.3",
   "description": "A powerful and efficient Vue 3 barcode scanning library with real-time detection using WebAssembly",
   "type": "module",
   "license": "MIT",

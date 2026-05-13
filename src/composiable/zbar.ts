@@ -42,7 +42,7 @@ export const useZbar = () => {
    * Only called if visualization is enabled
    */
   const visualizeDetections = (
-    ctx: CanvasRenderingContext2D,
+    ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D,
     symbols: ZBarSymbol[],
     canvasWidth: number,
     canvasHeight: number,
@@ -103,20 +103,24 @@ export const useZbar = () => {
       }
 
       // Get canvas context for image data extraction
-      const canvasCtx = canvas.value.getContext("2d");
+      // const canvasCtx = canvas.value.getContext("2d");
 
-      if (!canvasCtx) {
+      const backupCanvas = new OffscreenCanvas(canvasWidth, canvasHeight);
+      const backupCtx = backupCanvas.getContext("2d");
+      
+      if (!backupCtx) {
         throw new Error("Failed to obtain canvas rendering context");
       }
-
+      
+      backupCtx.drawImage(canvas.value, 0, 0);
       const visibleHeight = canvasHeight * 0.4;
       const startY = (canvasHeight - visibleHeight) / 2;
 
-      canvasCtx.fillStyle = "black";
+      backupCtx.fillStyle = "black";
 
-      canvasCtx.fillRect(0, 0, canvasWidth, startY);
+      backupCtx.fillRect(0, 0, canvasWidth, startY);
 
-      canvasCtx.fillRect(
+      backupCtx.fillRect(
         0,
         startY + visibleHeight,
         canvasWidth,
@@ -124,7 +128,7 @@ export const useZbar = () => {
       );
 
       // Extract image data from canvas (already contains the captured frame)
-      const imageData = canvasCtx.getImageData(0, 0, canvasWidth, canvasHeight);
+      const imageData = backupCtx.getImageData(0, 0, canvasWidth, canvasHeight);
       if (!imageData || !imageData.data || imageData.data.length === 0) {
         throw new Error("Failed to extract image data from canvas");
       }
@@ -135,7 +139,7 @@ export const useZbar = () => {
       // Visualize detections if enabled
       if (config?.enableVisualization !== false) {
         visualizeDetections(
-          config?.overlayCtx || canvasCtx,
+          config?.overlayCtx || backupCtx,
           symbols,
           canvasWidth,
           canvasHeight,

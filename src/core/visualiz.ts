@@ -153,7 +153,7 @@ function tickBarcodeDisplay(dt: number): void {
 
 export function drawBarcodes(
   symbols: ZBarSymbol[],
-  ctx: CanvasRenderingContext2D,
+  ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D,
   canvas: HTMLCanvasElement,
   color: string,
   now: number,
