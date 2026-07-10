@@ -15,6 +15,62 @@ Static image APIs scan the **entire image** by default. Pass `useScanRegion: tru
 
 ---
 
+## Installation
+
+```bash
+pnpm add vuescanr vue@^3.5.0
+```
+
+### Package dependencies
+
+| Kind | Package | Notes |
+|------|---------|-------|
+| **Runtime** | `@undecaf/zbar-wasm` | Bundled with vuescanr for barcode decoding |
+| **Peer** | `vue@^3.5.0` | Required in your application |
+
+**`vue3cam-lib` is not a dependency of vuescanr.** The published npm package does not include camera handling. Install it separately only if you want its camera composable:
+
+```bash
+pnpm add vue3cam-lib
+```
+
+---
+
+## Playground (this repository)
+
+The local demo under `playground/` uses [`vue3cam-lib`](https://www.npmjs.com/package/vue3cam-lib) for camera streaming. It is listed in **devDependencies** only and is **not** shipped to consumers of `vuescanr`.
+
+```bash
+pnpm install
+pnpm run dev
+```
+
+Playground camera flow (`vue3cam-lib@^0.0.9`):
+
+```typescript
+import { useCamera } from 'vue3cam-lib'
+import { useZbar } from 'vuescanr'
+
+const { video, canvas, init: initCamera, start } = useCamera()
+const { init: initScanner, detect } = useZbar()
+
+onMounted(async () => {
+  await initCamera()
+  await start()
+})
+
+watch(canvas, (el) => {
+  if (el && video.value) {
+    initScanner(video.value, el)
+    // poll detect() on an interval
+  }
+})
+```
+
+See the [vue3cam-lib documentation](https://www.npmjs.com/package/vue3cam-lib) for `init`, `start`, `pause`, `resume`, `capture`, torch control, and recording APIs.
+
+---
+
 ## Static Image Scanning
 
 ```typescript
@@ -81,6 +137,8 @@ const symbols = await scanImage(file, { useScanRegion: true })
 
 ## Camera Scanning (`useZbar`)
 
+`useZbar` handles **barcode detection** on a canvas. It does **not** manage the camera stream — bring your own `MediaStream` setup or use a library such as [`vue3cam-lib`](https://www.npmjs.com/package/vue3cam-lib).
+
 Complete API documentation for the `useZbar` composable function.
 
 `useZbar` is a Vue 3 composable that provides a high-level interface for real-time barcode detection using a camera feed.
@@ -119,96 +177,10 @@ const results = await scanImages([file, canvas, imageData])
 
 ## API Reference
 
-### `video`
+### `init(video, canvas)`
 
-- **Type**: `Ref<HTMLVideoElement | null>`
-- **Description**: Reference to the video element containing the camera stream
-- **Usage**: Template binding for hidden video element
-
-```vue
-<video ref="video" autoplay playsinline hidden></video>
-```
-
-### `canvas`
-
-- **Type**: `Ref<HTMLCanvasElement | null>`
-- **Description**: Reference to the canvas where frames and visualization are drawn
-- **Usage**: Template binding for display canvas
-
-```vue
-<canvas ref="canvas"></canvas>
-```
-
-### `camera`
-
-- **Type**: `CameraObject`
-- **Description**: Camera control interface
-- **Methods**:
-  - `init(config?: Config)` - Initialize camera with optional config
-  - `start()` - Start camera stream
-  - `pause()` - Pause camera stream
-  - `resume()` - Resume camera stream
-  - `stop()` - Stop camera stream
-
-```typescript
-// Initialize with custom config
-await init({
-  canvasWidth: 640,
-  canvasHeight: 480
-})
-
-// Start the stream
-await camera.start()
-
-// Control the stream
-pause()
-resume()
-stop()
-```
-
-### `captureFrame()`
-
-- **Type**: `() => void`
-- **Description**: Captures a single frame from the video stream to the canvas
-- **Usage**: Called automatically by `startFrameCapture()` or manually for single captures
-
-```typescript
-// Manual single frame capture
-captureFrame()
-
-// Now canvas contains the frame
-const ctx = canvas.value?.getContext('2d')
-console.log('Frame captured')
-```
-
-### `startFrameCapture(intervalMs?)`
-
-- **Type**: `(intervalMs?: number) => void`
-- **Parameters**:
-  - `intervalMs` (optional, default: 33ms = ~30fps) - Interval between frame captures
-- **Description**: Continuously captures frames from the video stream to the canvas
-- **Usage**: Call this to begin continuous frame capture
-
-```typescript
-// Start with default interval (30fps)
-startFrameCapture()
-
-// Or specify custom interval
-startFrameCapture(50) // ~20fps
-```
-
-### `stopFrameCapture()`
-
-- **Type**: `() => void`
-- **Description**: Stops continuous frame capture. Last frame remains frozen on canvas.
-- **Usage**: Call when you want to freeze the camera stream
-
-```typescript
-stopFrameCapture()
-
-// Canvas now shows the last captured frame
-// Perfect for displaying detection results
-```
+- **Type**: `(videoEl: HTMLVideoElement, canvasEl: HTMLCanvasElement) => void`
+- **Description**: Binds the video and canvas elements used by `detect()`. Camera permission and streaming are your responsibility (e.g. via `vue3cam-lib` or `getUserMedia`).
 
 ### `detect(config?)`
 
@@ -266,39 +238,57 @@ symbols.forEach(symbol => {
 })
 ```
 
-### `cleanup()`
+### `drawScanRegion(ctx, canvas)`
 
-- **Type**: `() => void`
-- **Description**: Cleans up resources (OffscreenCanvas, etc.)
-- **Usage**: Call in component unmount hook
+- **Type**: `(ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement) => void`
+- **Description**: Draws the center viewfinder overlay (dimmed top/bottom, green border) on a canvas context.
 
-```typescript
-onUnmounted(() => {
-  cleanup()
-})
-```
+### `scanImage(source, options?)` / `scanImages(sources, options?)`
+
+- **Description**: Scan static image sources without camera setup. Accepts `File`, `Blob`, `HTMLCanvasElement`, `HTMLImageElement`, `ImageBitmap`, or `ImageData`. See [Static Image Scanning](#static-image-scanning).
 
 ## Complete Example
 
+Live camera scanner using [`vue3cam-lib`](https://www.npmjs.com/package/vue3cam-lib) for the stream and `useZbar` for detection. This matches the `playground/App.vue` demo in this repository.
+
+```bash
+pnpm add vuescanr vue3cam-lib
+```
+
 ```vue
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, nextTick, watch } from 'vue'
+import { useCamera } from 'vue3cam-lib'
 import { useZbar } from 'vuescanr'
 import type { ZBarSymbol } from '@undecaf/zbar-wasm'
 
-const {
-  camera,
-  detect,
-  video,
-  canvas,
-  startFrameCapture,
-  stopFrameCapture,
-  cleanup
-} = useZbar()
+const { video, canvas, init: initCamera, start, resume } = useCamera()
+const { init: initScanner, detect } = useZbar()
+
+const overlay = ref<HTMLCanvasElement | null>(null)
+let overlayContext: CanvasRenderingContext2D | null = null
 
 const detected = ref<string[]>([])
 const isScanning = ref(false)
+const lastDetectionTime = ref(0)
 const scanInterval = ref<number | null>(null)
+const multipleDetectionMode = ref(false)
+
+const SCAN_INTERVAL = 100
+const MIN_DETECTION_INTERVAL = 50
+
+const handleDetection = (symbols: ZBarSymbol[]) => {
+  if (symbols.length === 0) return
+
+  const now = performance.now()
+  if (now - lastDetectionTime.value < MIN_DETECTION_INTERVAL) return
+
+  detected.value = multipleDetectionMode.value
+    ? symbols.map((s) => s.decode('utf-8')).filter(Boolean)
+    : [symbols[0].decode('utf-8')]
+
+  lastDetectionTime.value = now
+}
 
 const startScanning = () => {
   if (isScanning.value) return
@@ -308,77 +298,107 @@ const startScanning = () => {
     try {
       const symbols = await detect({
         enableVisualization: true,
-        visualizationColor: '#00ff0080',
-        multipleDetection: true
+        visualizationColor: '#05ad2c',
+        overlayCtx: overlayContext,
+        visualizationLineWidth: 2,
+        multipleDetection: multipleDetectionMode.value,
       })
-
-      if (symbols.length > 0) {
-        const barcodes = symbols.map(s => s.decode('utf-8'))
-        detected.value = barcodes
-        
-        // Stop after detection
-        stopScanning()
-      }
+      handleDetection(symbols)
     } catch (error) {
-      console.error('Detection error:', error)
+      console.error('Scanning error:', error)
     }
   }
 
-  scanInterval.value = window.setInterval(scan, 100)
+  scanInterval.value = window.setInterval(scan, SCAN_INTERVAL)
 }
 
 const stopScanning = () => {
-  if (scanInterval.value) {
+  if (scanInterval.value !== null) {
     clearInterval(scanInterval.value)
     scanInterval.value = null
   }
   isScanning.value = false
-  stopFrameCapture()
 }
 
-const reset = () => {
+const resetDetection = () => {
   detected.value = []
+
   const ctx = canvas.value?.getContext('2d')
   if (ctx && canvas.value) {
     ctx.clearRect(0, 0, canvas.value.width, canvas.value.height)
   }
+
+  const overlayCtx = overlay.value?.getContext('2d')
+  if (overlayCtx && overlay.value) {
+    overlayCtx.clearRect(0, 0, overlay.value.width, overlay.value.height)
+  }
+
   resume()
-  startFrameCapture()
   startScanning()
 }
 
 onMounted(async () => {
-  await init()
+  overlayContext = overlay.value?.getContext('2d') ?? null
+  await initCamera()
   await start()
-  startFrameCapture()
-  startScanning()
+  await nextTick()
 })
 
 onUnmounted(() => {
   stopScanning()
-  cleanup()
 })
+
+watch(canvas, (newCanvas) => {
+  if (newCanvas && video.value) {
+    initScanner(video.value, newCanvas)
+    startScanning()
+  }
+}, { once: true })
 </script>
 
 <template>
   <div class="scanner">
-    <video ref="video" autoplay playsinline hidden></video>
-    <canvas ref="canvas" class="preview"></canvas>
+    <video ref="video" autoplay playsinline muted hidden />
 
-    <div v-if="detected.length > 0" class="results">
-      <h2>Detected Barcodes</h2>
-      <div v-for="(code, i) in detected" :key="i" class="barcode">
-        {{ i + 1 }}. {{ code }}
+    <div class="camera-wrapper">
+      <canvas ref="canvas" class="preview" />
+      <canvas ref="overlay" class="overlay" />
+
+      <div v-if="isScanning && detected.length === 0" class="scanning">
+        Scanning...
       </div>
-      <button @click="reset">Scan Again</button>
     </div>
 
-    <div v-else-if="isScanning" class="scanning">
-      Scanning...
+    <label>
+      <input v-model="multipleDetectionMode" type="checkbox" />
+      Multiple barcode detection
+    </label>
+
+    <div v-if="detected.length > 0" class="results">
+      <h2>Detected Barcode{{ detected.length > 1 ? 's' : '' }}</h2>
+      <div v-for="(code, i) in detected" :key="i">{{ i + 1 }}. {{ code }}</div>
+      <button @click="resetDetection">Scan Again</button>
     </div>
   </div>
 </template>
 
+<style scoped>
+.camera-wrapper {
+  position: relative;
+  width: 640px;
+  height: 480px;
+}
+.preview,
+.overlay {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.overlay {
+  pointer-events: none;
+}
+</style>
 ```
 
 ## Real-Time Scanning Pattern
@@ -413,8 +433,6 @@ const intervalId = setInterval(scan, SCAN_INTERVAL)
 // Cleanup
 onUnmounted(() => {
   clearInterval(intervalId)
-  stopFrameCapture()
-  cleanup()
 })
 ```
 
@@ -442,10 +460,9 @@ const scan = async () => {
 
 ## Performance Optimization
 
-1. **Frame Capture Interval**: Adjust based on detection needs
+1. **Scan interval**: Adjust how often `detect()` runs
    ```typescript
-   startFrameCapture(50)  // 20fps - more frequent
-   startFrameCapture(100) // 10fps - less frequent
+   const SCAN_INTERVAL = 100 // ms between detect() calls
    ```
 
 2. **Detection Throttling**: Prevent excessive detections
@@ -487,7 +504,14 @@ symbols.forEach(symbol => {
 ## Troubleshooting
 
 ### Camera Not Starting
+
+Camera access is handled outside `vuescanr` (e.g. with `vue3cam-lib`):
+
 ```typescript
+import { useCamera } from 'vue3cam-lib'
+
+const { init, start } = useCamera()
+
 try {
   await init()
   await start()
@@ -519,6 +543,9 @@ All modern browsers with:
 - Promise support
 
 ## FAQ
+
+**Q: Does vuescanr include a camera library?**  
+A: No. The published package only includes barcode detection (`@undecaf/zbar-wasm`). Use [`vue3cam-lib`](https://www.npmjs.com/package/vue3cam-lib) or your own `getUserMedia` setup for camera access. The playground in this repo uses `vue3cam-lib` as a dev-only dependency.
 
 **Q: Can I use this in production?**  
 A: Yes, it's designed for production use with proper error handling and resource management.

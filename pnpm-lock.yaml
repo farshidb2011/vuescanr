@@ -14,9 +14,6 @@ importers:
       vue:
         specifier: ^3.5.0
         version: 3.5.33(typescript@6.0.3)
-      vue3cam-lib:
-        specifier: ^0.0.6
-        version: 0.0.6(vue@3.5.33(typescript@6.0.3))
     devDependencies:
       '@types/node':
         specifier: ^24.12.2
@@ -42,6 +39,9 @@ importers:
       vue-tsc:
         specifier: ^3.2.7
         version: 3.2.7(typescript@6.0.3)
+      vue3cam-lib:
+        specifier: ^0.0.9
+        version: 0.0.9(vue@3.5.33(typescript@6.0.3))
 
 packages:
 
@@ -949,8 +949,8 @@ packages:
     peerDependencies:
       typescript: '>=5.0.0'
 
-  vue3cam-lib@0.0.6:
-    resolution: {integrity: sha512-xOODSpUG9Es7B8vvotK/3Pb1Hw3cg5VzgTR+alEhQF+TUXrfGv0nS+gDh1MUFzXKXCn3w6bLeEeSfVjfu+sqBA==}
+  vue3cam-lib@0.0.9:
+    resolution: {integrity: sha512-8JZ3WfqzzszQy47dta2kss5nEwlZS48lUaoVK3dT+G9lBSIgxyxGTVjMQmbHEG/pYEMCPM6ZREJQO6JV5vhIdw==}
     peerDependencies:
       vue: ^3.5.32
 
@@ -1738,7 +1738,7 @@ snapshots:
       '@vue/language-core': 3.2.7
       typescript: 6.0.3
 
-  vue3cam-lib@0.0.6(vue@3.5.33(typescript@6.0.3)):
+  vue3cam-lib@0.0.9(vue@3.5.33(typescript@6.0.3)):
     dependencies:
       vue: 3.5.33(typescript@6.0.3)
 
