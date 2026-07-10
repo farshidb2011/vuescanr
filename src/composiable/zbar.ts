@@ -5,9 +5,9 @@ import {
   scanImage as scanImageSource,
   scanImages as scanImagesSources,
   scanImageDataInternal,
-} from "@/core/scan";
-import type { ScanOptions, ScanSource } from "@/core/scan";
-import { drawBarcodes, drawScanRegion } from "@/core/visualiz";
+} from "../core/scan";
+import type { ScanOptions, ScanSource } from "../core/scan";
+import { drawBarcodes, drawScanRegion } from "../core/visualiz";
 
 export interface DetectionConfig {
   enableVisualization?: boolean;
