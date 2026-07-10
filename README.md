@@ -1,8 +1,87 @@
-# useZbar API Documentation
+# VueScanr API Documentation
 
-Complete API documentation for the `useZbar` composable function.
+VueScanr supports **live camera scanning** and **static image scanning** from files, blobs, canvases, and raw `ImageData`.
 
 ## Overview
+
+- **Camera scanning** — use the `useZbar` composable with a video stream and canvas (via your camera library or custom code).
+- **Static image scanning** — use top-level `scan*` functions; no `<video>` element required.
+
+### Scan region behavior
+
+Live camera scanning applies a **center scan region** by default: only the middle 40% of the frame is decoded. This matches a viewfinder-style UX and ignores barcodes near the top or bottom edge.
+
+Static image APIs scan the **entire image** by default. Pass `useScanRegion: true` only if you want the same center-band behavior on a still image.
+
+---
+
+## Static Image Scanning
+
+```typescript
+import {
+  scanImage,
+  scanImages,
+  scanBlob,
+  scanCanvas,
+  scanImageData,
+  scanImageElement,
+  scanImageBitmap,
+} from 'vuescanr'
+```
+
+### Single file or any image source
+
+```typescript
+import { scanImage, scanSource } from 'vuescanr'
+
+// File, Blob, canvas, ImageData, HTMLImageElement, or ImageBitmap
+const symbols = await scanImage(file)
+const symbols = await scanSource(canvas)
+```
+
+### Multiple files
+
+```typescript
+const results = await scanImages(files)
+
+results.forEach((result, index) => {
+  if (result.success) {
+    console.log(index, result.symbols.map((s) => s.decode('utf-8')))
+  } else {
+    console.error(index, result.error)
+  }
+})
+```
+
+Results are returned in the same order as the input. One failed image does not stop the rest.
+
+### Canvas, ImageData, and other sources
+
+```typescript
+// HTMLCanvasElement — full canvas by default
+const symbols = await scanCanvas(canvas)
+
+// Raw pixels
+const symbols = await scanImageData(imageData)
+
+// Blob / loaded image / ImageBitmap
+const symbols = await scanBlob(blob)
+const symbols = await scanImageElement(img)
+const symbols = await scanImageBitmap(bitmap)
+```
+
+### Optional scan region on images
+
+```typescript
+// Same center 40% band as camera mode
+const symbols = await scanImage(file, { useScanRegion: true })
+```
+
+---
+
+## Camera Scanning (`useZbar`)
+
+Complete API documentation for the `useZbar` composable function.
 
 `useZbar` is a Vue 3 composable that provides a high-level interface for real-time barcode detection using a camera feed.
 
@@ -12,19 +91,30 @@ Complete API documentation for the `useZbar` composable function.
 import { useZbar } from 'vuescanr'
 
 const {
-  init,               // Initialize camera settings and get permission
-  start,              // Start video stream from camera to canvas
-  stop,               // Stop video stream from camera
-  pause,              // Pause video stream
-  resume,             // Resume video stream
-  video,              // HTMLVideoElement ref - camera stream
-  canvas,             // HTMLCanvasElement ref - display canvas
-  detect,             // Detection function
-  captureFrame,       // Single frame capture function
-  startFrameCapture,  // Start continuous frame capture
-  stopFrameCapture,   // Stop continuous frame capture
-  cleanup             // Resource cleanup
+  init,               // Bind video + canvas elements
+  detect,             // Detection function (scan region on by default)
+  drawScanRegion,     // Draw the viewfinder overlay
+  scanImage,          // Scan any static image source
+  scanImages,         // Scan multiple static sources
 } = useZbar()
+```
+
+### Static image scanning via composable
+
+`scanImage` and `scanImages` accept any supported source — no `<video>` or `init()` required:
+
+```typescript
+const { scanImage, scanImages } = useZbar()
+
+// Auto-detects source type
+await scanImage(file)
+await scanImage(blob)
+await scanImage(canvas)
+await scanImage(imageData)
+await scanImage(imgElement)
+await scanImage(bitmap)
+
+const results = await scanImages([file, canvas, imageData])
 ```
 
 ## API Reference
@@ -136,6 +226,7 @@ interface DetectionConfig {
   visualizationColor?: string        // Hex color for drawing (default: "#00ff0080")
   visualizationLineWidth?: number    // Line width in pixels (default: 2)
   multipleDetection?: boolean        // Detect all barcodes or just first (default: false)
+  useScanRegion?: boolean            // Center 40% band only (default: true for detect)
 }
 ```
 
@@ -161,6 +252,11 @@ const symbols = await detect({
   enableVisualization: true,
   visualizationColor: '#ff0000aa',
   visualizationLineWidth: 3
+})
+
+// Full canvas (disable camera scan region)
+const symbols = await detect({
+  useScanRegion: false
 })
 
 // Process results

@@ -1,0 +1,1 @@
+{"root":["./src/index.ts","./src/composiable/zbar.ts","./src/core/scan.ts","./src/core/visualiz.ts","./playground/App.vue"],"errors":true,"version":"6.0.3"}

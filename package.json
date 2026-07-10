@@ -1,6 +1,6 @@
 {
   "name": "vuescanr",
-  "version": "0.2.3",
+  "version": "0.3.0",
   "description": "A powerful and efficient Vue 3 barcode scanning library with real-time detection using WebAssembly",
   "type": "module",
   "license": "MIT",
@@ -50,6 +50,8 @@
     "build": "vue-tsc -b && vite build --config vite.playground.config.ts",
     "build-types": "vue-tsc --declaration --emitDeclarationOnly --outDir lib-dist",
     "preview": "vite preview --config vite.playground.config.ts",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "prepublishOnly": "pnpm run build-lib",
     "prepack": "pnpm run build-lib"
   },
@@ -73,8 +75,10 @@
     "@types/node": "^24.12.2",
     "@vitejs/plugin-vue": "^6.0.6",
     "@vue/tsconfig": "^0.9.1",
+    "happy-dom": "^20.0.10",
     "typescript": "~6.0.2",
     "vite": "^8.0.10",
+    "vitest": "^3.2.4",
     "vue-tsc": "^3.2.7"
   }
 }
