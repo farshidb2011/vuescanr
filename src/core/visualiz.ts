@@ -96,7 +96,11 @@ function getBoundingRect(points: Point[]): {
 
 function updateBarcodeTracker(symbols: ZBarSymbol[]): void {
   const seen = new Set<string>();
-
+  console.log(symbols.length);
+  console.log(symbols);
+  
+  
+  
   for (const sym of symbols) {
     const key = `${sym.typeName}:${sym.decode()}`;
     const rect = getBoundingRect(sym.points); // ← per-symbol، ایزوله
@@ -158,7 +162,7 @@ export function drawBarcodes(
   color: string,
   now: number,
 ) {
-  updateBarcodeTracker(symbols);
+  updateBarcodeTracker(symbols.filter(Boolean));
   const dt = now - lastBarcodeRenderTime;
   lastBarcodeRenderTime = now;
   tickBarcodeDisplay(dt);
