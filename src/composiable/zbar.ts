@@ -1,14 +1,25 @@
-import * as barcode from "@undecaf/zbar-wasm";
 import { MaybeRef, ref, toValue } from "vue";
 import type { ZBarSymbol } from "@undecaf/zbar-wasm";
+import {
+  extractImageDataFromCanvas,
+  scanImage as scanImageSource,
+  scanImages as scanImagesSources,
+  scanImageDataInternal,
+} from "@/core/scan";
+import type { ScanOptions, ScanSource } from "@/core/scan";
 import { drawBarcodes, drawScanRegion } from "@/core/visualiz";
 
-interface DetectionConfig {
+export interface DetectionConfig {
   enableVisualization?: boolean;
   overlayCtx?: CanvasRenderingContext2D | null;
   visualizationColor?: string;
   visualizationLineWidth?: number;
   multipleDetection?: boolean;
+  /**
+   * When true (default), only the center 40% of the canvas is scanned.
+   * Set to false to scan the entire canvas.
+   */
+  useScanRegion?: boolean;
 }
 
 interface DetectionState {
@@ -102,39 +113,13 @@ export const useZbar = () => {
         return [];
       }
 
-      // Get canvas context for image data extraction
-      // const canvasCtx = canvas.value.getContext("2d");
-
-      const backupCanvas = new OffscreenCanvas(canvasWidth, canvasHeight);
-      const backupCtx = backupCanvas.getContext("2d");
-      
-      if (!backupCtx) {
-        throw new Error("Failed to obtain canvas rendering context");
-      }
-      
-      backupCtx.drawImage(canvas.value, 0, 0);
-      const visibleHeight = canvasHeight * 0.4;
-      const startY = (canvasHeight - visibleHeight) / 2;
-
-      backupCtx.fillStyle = "black";
-
-      backupCtx.fillRect(0, 0, canvasWidth, startY);
-
-      backupCtx.fillRect(
-        0,
-        startY + visibleHeight,
-        canvasWidth,
-        canvasHeight - (startY + visibleHeight),
+      const useScanRegion = config?.useScanRegion !== false;
+      const { imageData, backupCtx } = extractImageDataFromCanvas(
+        canvas.value,
+        useScanRegion,
       );
 
-      // Extract image data from canvas (already contains the captured frame)
-      const imageData = backupCtx.getImageData(0, 0, canvasWidth, canvasHeight);
-      if (!imageData || !imageData.data || imageData.data.length === 0) {
-        throw new Error("Failed to extract image data from canvas");
-      }
-
-      // Perform barcode detection
-      const symbols = await barcode.scanImageData(imageData);
+      const symbols = await scanImageDataInternal(imageData);
 
       // Visualize detections if enabled
       if (config?.enableVisualization !== false) {
@@ -163,5 +148,16 @@ export const useZbar = () => {
     init,
     detect,
     drawScanRegion,
+    /**
+     * Scan a single static image source. Accepts `File`, `Blob`, canvas,
+     * `ImageData`, `HTMLImageElement`, or `ImageBitmap`.
+     */
+    scanImage: (source: ScanSource, options?: ScanOptions) =>
+      scanImageSource(source, options),
+    /**
+     * Scan multiple static image sources in order.
+     */
+    scanImages: (sources: ScanSource[], options?: ScanOptions) =>
+      scanImagesSources(sources, options),
   };
 };
