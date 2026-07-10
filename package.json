@@ -1,20 +1,20 @@
 {
   "name": "vuescanr",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "A powerful and efficient Vue 3 barcode scanning library with real-time detection using WebAssembly",
   "type": "module",
   "license": "MIT",
   "author": {
     "name": "Farshid Bahadori",
-    "url": "https://github.com/farshidb"
+    "url": "https://github.com/farshidb2011"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/farshidb/vuescanr.git"
+    "url": "https://github.com/farshidb2011/vuescanr.git"
   },
-  "homepage": "https://github.com/farshidb/vuescanr#readme",
+  "homepage": "https://github.com/farshidb2011/vuescanr#readme",
   "bugs": {
-    "url": "https://github.com/farshidb/vuescanr/issues"
+    "url": "https://github.com/farshidb2011/vuescanr/issues"
   },
   "keywords": [
     "vue",
