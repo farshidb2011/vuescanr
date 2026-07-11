@@ -156,7 +156,7 @@ When submitting code:
 ```
 vuescanr/
 ├── src/                    # Source code
-│   ├── composiable/       # Vue composables
+│   ├── composables/       # Vue composables
 │   │   └── zbar.ts        # Main useZbar composable
 │   ├── core/              # Core logic
 │   └── types/             # Type definitions
