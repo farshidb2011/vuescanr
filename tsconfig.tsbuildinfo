@@ -1,1 +1,0 @@
-{"root":["./src/index.ts","./src/composiable/camera.ts","./src/composiable/state.ts","./src/composiable/useBarcode.ts","./src/core/scanner.ts","./src/libs/camera.ts","./src/types/barcode.d.ts","./src/types/camera.d.ts"],"version":"6.0.3"}

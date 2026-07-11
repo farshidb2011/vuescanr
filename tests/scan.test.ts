@@ -15,7 +15,7 @@ import {
   scanImages,
   scanSource,
 } from "@/core/scan";
-import { useZbar } from "@/composiable/zbar";
+import { useZbar } from "@/composables/zbar";
 
 function createImageData(width: number, height: number, fill = 255): ImageData {
   const data = new Uint8ClampedArray(width * height * 4);

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, nextTick, watch } from "vue";
-import { useZbar } from '@/composiable/zbar';
+import { useZbar } from '@/composables/zbar';
 import type { ZBarSymbol } from "@undecaf/zbar-wasm";
 import { useCamera, Config } from "vue3cam-lib";
 import { drawScanRegion } from "@/core/visualiz";

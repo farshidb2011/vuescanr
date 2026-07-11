@@ -1,5 +1,5 @@
-export { useZbar } from "./composiable/zbar";
-export type { DetectionConfig } from "./composiable/zbar";
+export { useZbar } from "./composables/zbar";
+export type { DetectionConfig } from "./composables/zbar";
 export {
   scanBlob,
   scanCanvas,
